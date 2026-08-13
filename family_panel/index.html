@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CareSync V1 - Panel Web Multi-Rol</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #F4F6F9; /* bg-clinical light */
+            --card-color: rgba(255, 255, 255, 0.72); /* surface-card glassmorphic white */
+            --text-primary: #1C1C1E; /* text-main */
+            --text-secondary: #6B7280; /* text-muted */
+            --primary-accent: #0A84FF; /* medical-primary */
+            --primary-accent-glow: rgba(10, 132, 255, 0.15);
+            --accent-red: #FF453A; /* emergency-alert */
+            --accent-green: #34C759; /* medical-success */
+            --accent-orange: #FF9F0A; /* warning */
+            --border-color: rgba(10, 132, 255, 0.12); /* clinical blue border glass overlay */
+            --border-hover: rgba(10, 132, 255, 0.35);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(10, 132, 255, 0.05) 0px, transparent 40%),
+                radial-gradient(at 100% 0%, rgba(52, 199, 89, 0.04) 0px, transparent 40%),
+                radial-gradient(at 50% 100%, rgba(255, 159, 10, 0.02) 0px, transparent 50%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 24px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* Ambient animated frosted glass blobs in background */
+        @keyframes float-blob-1 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(5vw, 4vh) scale(1.1); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes float-blob-2 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(-4vw, -6vh) scale(0.9); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+        @keyframes float-blob-3 {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(3vw, -4vh) scale(1.15); }
+            100% { transform: translate(0, 0) scale(1); }
+        }
+
+        .bg-blob {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(130px);
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.32;
+            transition: all 1s ease;
+        }
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 45vw;
+            height: 45vw;
+            background: rgba(10, 132, 255, 0.28); /* medical-primary */
+            animation: float-blob-1 18s infinite ease-in-out;
+        }
+        .blob-2 {
+            bottom: -15%;
+            right: -10%;
+            width: 40vw;
+            height: 40vw;
+            background: rgba(52, 199, 89, 0.22); /* medical-success */
+            animation: float-blob-2 22s infinite ease-in-out;
+        }
+        .blob-3 {
+            top: 35%;
+            left: 35%;
+            width: 35vw;
+            height: 35vw;
+            background: rgba(255, 159, 10, 0.08); /* warning */
+            animation: float-blob-3 20s infinite ease-in-out;
+        }
+
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* login screen */
+        .login-wrapper {
+            margin: auto;
+            width: 100%;
+            max-width: 460px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Bento Card wrapper */
+        .bento-card {
+            background: var(--card-color);
+            border-radius: 20px; /* Premium smooth corners */
+            border: 1px solid var(--border-color);
+            padding: 26px;
+            backdrop-filter: blur(25px) saturate(180%); /* Premium frosted glass */
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            box-shadow: 
+                0 10px 30px rgba(10, 132, 255, 0.03),
+                inset 0 1px 1px rgba(255, 255, 255, 0.8),
+                inset 0 -1px 1px rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            position: relative;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .bento-card.interactive:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 45px rgba(10, 132, 255, 0.08),
+                inset 0 1px 1px rgba(255, 255, 255, 0.95);
+            border-color: var(--border-hover);
+        }
+
+        .nested-card {
+            background: rgba(255, 255, 255, 0.4) !important;
+            border: 1px solid rgba(10, 132, 255, 0.08) !important;
+            border-radius: 14px !important;
+            padding: 18px !important;
+            box-shadow: 
+                inset 0 1px 1px rgba(255, 255, 255, 0.4),
+                0 4px 16px rgba(10, 132, 255, 0.01) !important;
+            backdrop-filter: blur(8px) !important;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.4px;
+            line-height: 1.2;
+        }
+
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            font-weight: 500;
+        }
+
+        /* Forms & Inputs */
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            font-size: 11px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .form-group input, .form-group select {
+            background: rgba(255, 255, 255, 0.4); /* Glass transparency */
+            border: 1px solid rgba(10, 132, 255, 0.15);
+            border-radius: 10px; /* Smooth curved inputs */
+            padding: 12px 16px;
+            font-size: 14px;
+            outline: none;
+            color: var(--text-primary);
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .form-group input::placeholder {
+            color: #9CA3AF;
+        }
+
+        .form-group input:focus, .form-group select:focus {
+            border-color: var(--primary-accent);
+            background: rgba(255, 255, 255, 0.85);
+            box-shadow: 
+                0 0 0 4px rgba(10, 132, 255, 0.12),
+                inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .btn {
+            background: #1C1C1E; /* High readability dark slate base */
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px; /* Smooth buttons */
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            width: 100%;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-align: center;
+            box-shadow: 
+                0 8px 16px rgba(28, 28, 30, 0.15),
+                inset 0 1px 2px rgba(255, 255, 255, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #000000;
+            transform: translateY(-2px);
+            box-shadow: 
+                0 12px 24px rgba(28, 28, 30, 0.25),
+                inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.6);
+            color: var(--text-primary);
+            border: 1px solid rgba(10, 132, 255, 0.15);
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.02),
+                inset 0 1px 2px rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(8px);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--primary-accent);
+            transform: translateY(-1px);
+        }
+
+        /* Top Header Bar */
+        .header-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--card-color);
+            border-radius: 14px;
+            padding: 14px 24px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(30px) saturate(190%);
+            box-shadow: 
+                0 10px 25px rgba(0, 0, 0, 0.01),
+                inset 0 1px 1px rgba(255, 255, 255, 0.9);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-box {
+            background: var(--primary-accent);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 20px;
+            box-shadow: inset 0 1px 2px rgba(255, 255, 255, 0.3);
+        }
+
+        .profile-badge {
+            background: rgba(10, 132, 255, 0.08);
+            border: 1px solid rgba(10, 132, 255, 0.15);
+            color: var(--primary-accent);
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: 700;
+            backdrop-filter: blur(6px);
+        }
+
+        /* Bento Grid Core Layouts (Restructured) */
+        .bento-grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid-doctor {
+            display: grid;
+            grid-template-columns: 340px 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 24px;
+        }
+
+        #doc-patients-card {
+            grid-column: 1;
+            grid-row: 1 / 4;
+            min-height: 600px;
+        }
+
+        #doc-file-card {
+            grid-column: 2 / 4;
+            grid-row: 1;
+        }
+
+        #doc-meds-card {
+            grid-column: 2;
+            grid-row: 2;
+            min-height: 280px;
+        }
+
+        #doc-insights-card {
+            grid-column: 3;
+            grid-row: 2;
+            min-height: 280px;
+        }
+
+        #doc-logs-card {
+            grid-column: 2 / 4;
+            grid-row: 3;
+            min-height: 260px;
+        }
+
+        .grid-caregiver {
+            display: grid;
+            grid-template-columns: 340px 1fr 1fr;
+            grid-template-rows: auto auto auto;
+            gap: 24px;
+        }
+
+        #cg-elders-card {
+            grid-column: 1;
+            grid-row: 1 / 4;
+            min-height: 600px;
+        }
+
+        #cg-file-card {
+            grid-column: 2;
+            grid-row: 1;
+            min-height: 280px;
+        }
+
+        #cg-meds-card {
+            grid-column: 3;
+            grid-row: 1 / 3;
+            min-height: 380px;
+        }
+
+        #cg-insights-card {
+            grid-column: 3;
+            grid-row: 3;
+            min-height: 200px;
+        }
+
+        #cg-logs-card {
+            grid-column: 2;
+            grid-row: 2 / 4;
+            min-height: 300px;
+        }
+
+        .grid-admin {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: auto auto;
+            gap: 24px;
+        }
+
+        /* Table & Lists scrollable areas */
+        .list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 420px;
+            overflow-y: auto;
+            padding-right: 6px;
+        }
+
+        .list-container::-webkit-scrollbar {
+            width: 6px;
+        }
+        .list-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.02);
+            border-radius: 10px;
+        }
+        .list-container::-webkit-scrollbar-thumb {
+            background: rgba(10, 132, 255, 0.15);
+            border-radius: 10px;
+        }
+        .list-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(10, 132, 255, 0.3);
+        }
+
+        .list-item {
+            background: rgba(255, 255, 255, 0.45); /* Glassy list item */
+            border: 1px solid rgba(10, 132, 255, 0.08);
+            border-radius: 10px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(6px);
+        }
+
+        .list-item.active {
+            border-color: var(--primary-accent);
+            background: rgba(10, 132, 255, 0.08);
+            box-shadow: 
+                0 4px 12px rgba(10, 132, 255, 0.04),
+                inset 0 1px 1px rgba(255, 255, 255, 0.5);
+        }
+
+        .list-item:hover {
+            background: rgba(255, 255, 255, 0.85);
+            transform: translateX(3px);
+            border-color: var(--border-hover);
+        }
+
+        .status-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            box-shadow: 0 0 8px currentColor;
+        }
+
+        .status-light.green { background-color: var(--accent-green); color: var(--accent-green); }
+        .status-light.orange { background-color: var(--accent-orange); color: var(--accent-orange); }
+
+        /* Emergency alert banner with premium pulsing */
+        @keyframes pulse-emergency {
+            0% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0.4); border-color: rgba(255, 69, 58, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 69, 58, 0); border-color: rgba(255, 69, 58, 1); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 69, 58, 0); border-color: rgba(255, 69, 58, 0.7); }
+        }
+
+        .alert-banner {
+            background: rgba(255, 69, 58, 0.07);
+            border: 1.5px solid var(--accent-red);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            backdrop-filter: blur(20px);
+            animation: pulse-emergency 2s infinite ease-in-out;
+        }
+
+        .alert-banner.active { display: flex; }
+
+        .alert-title { font-weight: 800; color: var(--accent-red); font-size: 16px; letter-spacing: -0.2px; }
+        .alert-desc { font-size: 13px; color: var(--text-primary); margin-top: 2px; font-weight: 500; }
+
+        /* Audit logs styling */
+        .audit-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+
+        .audit-table th, .audit-table td {
+            text-align: left;
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(10, 132, 255, 0.06);
+        }
+
+        .audit-table th {
+            color: var(--text-secondary);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            letter-spacing: 0.5px;
+            background: rgba(10, 132, 255, 0.04);
+        }
+
+        .audit-table tbody tr {
+            transition: background 0.2s ease;
+        }
+
+        .audit-table tbody tr:hover {
+            background: rgba(10, 132, 255, 0.04);
+        }
+
+        .action-circle-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: var(--primary-accent);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            align-self: flex-end;
+            font-size: 20px;
+            font-weight: bold;
+            box-shadow: 
+                0 4px 12px rgba(10, 132, 255, 0.25),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.25s ease;
+        }
+
+        .action-circle-btn:hover {
+            transform: scale(1.08);
+            box-shadow: 
+                0 6px 16px rgba(10, 132, 255, 0.35),
+                inset 0 1px 1px rgba(255, 255, 255, 0.3);
+        }
+
+        .quick-accounts-box {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            padding: 8px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(10, 132, 255, 0.15);
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:hover {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: var(--primary-accent);
+            transform: translateY(-1px);
+        }
+
+        /* Medications in Patient File */
+        .med-item {
+            background: rgba(255, 255, 255, 0.45);
+            border: 1px solid rgba(10, 132, 255, 0.08);
+            border-radius: 10px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(4px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.25s ease;
+        }
+        .med-item:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--border-hover);
+        }
+
+        .med-title {
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+
+        .med-meta {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            font-weight: 500;
+        }
+
+        .status-badge {
+            font-size: 10px;
+            font-weight: 800;
+            padding: 3px 6px;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-badge.synced {
+            background: rgba(52, 199, 89, 0.08);
+            color: var(--accent-green);
+            border: 1px solid rgba(52, 199, 89, 0.15);
+        }
+
+        /* Transparent Glassy Insight Items */
+        .insight-item {
+            font-size: 13px;
+            background: rgba(255, 255, 255, 0.45);
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(10, 132, 255, 0.08);
+            backdrop-filter: blur(4px);
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
+            transition: all 0.25s ease;
+        }
+
+        .insight-item:hover {
+            background: rgba(255, 255, 255, 0.85);
+            border-color: var(--border-hover);
+            transform: translateY(-1px);
+        }
+
+        /* Modal Settings Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.25);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .modal-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+        .modal-content {
+            width: 100%;
+            max-width: 580px;
+            background: rgba(255, 255, 255, 0.82);
+            border-radius: 24px;
+            border: 1px solid var(--border-color);
+            padding: 28px;
+            box-shadow: 0 20px 45px rgba(10, 132, 255, 0.08);
+            backdrop-filter: blur(30px) saturate(180%);
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.active .modal-content {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <!-- Background Glass Blobs -->
+    <div class="bg-blob blob-1"></div>
+    <div class="bg-blob blob-2"></div>
+    <div class="bg-blob blob-3"></div>
+
+    <!-- 1. LOGIN SCREEN -->
+    <div class="login-wrapper" id="login-screen">
+        <div class="bento-card">
+            <div class="card-header" style="text-align: center; display: block;">
+                <div class="logo-box" style="margin: 0 auto 12px;">C</div>
+                <div class="card-title" style="font-size: 26px;">CareSync V1</div>
+                <div class="card-subtitle">Inicia sesión en el portal clínico y familiar</div>
+            </div>
+            
+            <div style="margin-top: 10px;">
+                <div class="form-group">
+                    <label for="login-email">Correo Electrónico</label>
+                    <input type="email" id="login-email" placeholder="ejemplo@caresync.com">
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" placeholder="••••••••">
+                </div>
+                <button class="btn" onclick="handleLogin()" style="margin-top: 10px;">Ingresar</button>
+            </div>
+
+            <div style="margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 14px;">
+                <div style="font-size: 13px; color: var(--text-secondary); font-weight: 600; margin-bottom: 8px;">Cuentas de prueba rápida:</div>
+                <div class="quick-accounts-box">
+                    <button class="quick-btn" onclick="quickFill('doctor@caresync.com')">Médico</button>
+                    <button class="quick-btn" onclick="quickFill('caregiver@caresync.com')">Cuidador</button>
+                    <button class="quick-btn" onclick="quickFill('admin@caresync.com')">Administrador</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. MAIN DASHBOARD WRAPPER -->
+    <div class="container" id="main-dashboard" style="display: none;">
+        <!-- Top Bar -->
+        <div class="header-bar">
+            <div class="header-left">
+                <div class="logo-box">C</div>
+                <div class="profile-badge" id="profile-indicator">Cargando...</div>
+            </div>
+            <div class="header-right" style="display: flex; gap: 8px; align-items: center;">
+                <button class="btn btn-secondary" onclick="openConfigModal()" style="width: auto; padding: 8px 12px; border-radius: 8px;" title="Configuración">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Emergency Alert Banner (visible to Caregiver / Admin if active) -->
+        <div class="alert-banner" id="emergency-banner">
+            <div>
+                <div class="alert-title">ALERTA CRÍTICA DE EMERGENCIA ACTIVA</div>
+                <div class="alert-desc">José Martínez ha activado el botón de pánico en su dispositivo.</div>
+            </div>
+            <button class="btn" style="background: var(--accent-red); width: auto; padding: 10px 20px;" onclick="resolveEmergency()">Resolver Alerta</button>
+        </div>
+
+        <!-- Conditionally Rendered Portal Views -->
+        
+        <!-- A. PANEL MÉDICO -->
+        <div class="grid-doctor" id="doctor-portal" style="display: none;">
+            <!-- Pacientes Asignados -->
+            <div class="bento-card" id="doc-patients-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Mis Pacientes</div>
+                        <div class="card-subtitle">Adultos mayores a tu cargo clínico.</div>
+                    </div>
+                </div>
+                <div class="form-group" style="margin-bottom: 14px;">
+                    <input type="text" id="patient-search-input" onkeyup="searchPatients()" placeholder="Buscar paciente por nombre...">
+                </div>
+                <div class="list-container" id="doctor-patient-list">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <!-- Ficha Clínica del Paciente Seleccionado -->
+            <div class="bento-card" id="doc-file-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" id="selected-patient-name">Selecciona un paciente</div>
+                        <div class="card-subtitle">Ficha clínica general e historial de tratamientos.</div>
+                    </div>
+                </div>
+
+                <!-- Ficha Clínica (Visualización - Read-only) -->
+                <div id="patient-clinical-file-view" style="display: none; padding: 18px; border: 1px solid rgba(10, 132, 255, 0.12); border-radius: 12px; background: rgba(255,255,255,0.25); backdrop-filter: blur(10px);">
+                    <div style="font-weight: 700; font-size: 15px; margin-bottom: 12px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Ficha de Datos del Paciente</div>
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 14px;">
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Nombre Completo</div>
+                            <div id="patient-view-name" style="font-size: 14px; font-weight: 600; margin-top: 4px;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Correo Electrónico</div>
+                            <div id="patient-view-email" style="font-size: 14px; font-weight: 600; margin-top: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Edad</div>
+                            <div id="patient-view-age" style="font-size: 14px; font-weight: 600; margin-top: 4px;">-</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Enfermedades</div>
+                            <div id="patient-view-diseases" style="font-size: 14px; font-weight: 600; margin-top: 4px; color: var(--text-primary);">-</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 11px; color: var(--text-secondary); font-weight: 700; text-transform: uppercase;">Diagnósticos / Notas</div>
+                            <div id="patient-view-diagnostics" style="font-size: 14px; font-weight: 600; margin-top: 4px; color: var(--text-primary);">-</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="toggleDoctorEditForm(true)" style="width: auto; padding: 8px 18px; font-size: 13px; margin-left: auto; display: block;">Modificar Ficha Clínica</button>
+                </div>
+
+                <!-- Ficha Clínica (Edición - Doctor sólo edita enfermedades y diagnósticos) -->
+                <div id="patient-clinical-file-edit" style="display: none; padding: 18px; border: 1px solid rgba(10, 132, 255, 0.12); border-radius: 12px; background: rgba(255,255,255,0.45); backdrop-filter: blur(10px);">
+                    <div style="font-weight: 700; font-size: 15px; margin-bottom: 12px; color: var(--text-primary);">Editar Diagnóstico y Enfermedades</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Enfermedades que padece</label>
+                            <input type="text" id="patient-diseases-input" placeholder="Ej: Hipertensión, Diabetes">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Diagnósticos / Notas Clínicas</label>
+                            <input type="text" id="patient-diagnostics-input" placeholder="Ej: Monitoreo cardiaco semanal">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button class="btn btn-secondary" onclick="toggleDoctorEditForm(false)" style="width: auto; padding: 8px 18px; font-size: 13px;">Cancelar</button>
+                        <button class="btn" onclick="savePatientDetails()" style="width: auto; padding: 8px 18px; font-size: 13px;">Guardar Cambios</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicación Programada -->
+            <div class="bento-card" id="doc-meds-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Medicación Programada</div>
+                        <div class="card-subtitle">Dosificaciones asignadas vigentes.</div>
+                    </div>
+                </div>
+                <div class="list-container" id="selected-patient-meds" style="gap: 8px;">
+                    <div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 40px 10px;">Selecciona un paciente para ver su medicación.</div>
+                </div>
+            </div>
+
+            <!-- Insights de IA -->
+            <div class="bento-card" id="doc-insights-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Insights Clínicos (IA)</div>
+                        <div class="card-subtitle">Observaciones de riesgo detectadas.</div>
+                    </div>
+                </div>
+                <div class="list-container" id="selected-patient-insights" style="gap: 8px;">
+                    <div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 40px 10px;">Selecciona un paciente para ver sus observaciones de IA.</div>
+                </div>
+            </div>
+
+            <!-- Bitácora de Actividad del Paciente -->
+            <div class="bento-card" id="doc-logs-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Bitácora de Actividad del Paciente</div>
+                        <div class="card-subtitle">Historial clínico y de telemetría inmutable.</div>
+                    </div>
+                </div>
+                <div class="list-container" id="selected-patient-logs" style="gap: 8px; max-height: 200px; overflow-y: auto;">
+                    <div style="font-size: 13px; color: var(--text-secondary); text-align: center; padding-top: 20px;">
+                        Selecciona un paciente para ver su historial de actividad.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- B. PANEL DEL CUIDADOR -->
+        <div class="grid-caregiver" id="caregiver-portal" style="display: none;">
+            <!-- Mis Adultos Mayores -->
+            <div class="bento-card" id="cg-elders-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Adultos Mayores</div>
+                        <div class="card-subtitle">Monitoreo de familiares a cargo.</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="toggleCaregiverRegisterForm(true)" style="width: auto; padding: 6px 12px; font-size: 12px;">+ Registrar</button>
+                </div>
+
+                <!-- Formulario de Registro para el Cuidador (Oculto por defecto) -->
+                <div id="caregiver-register-form-box" style="display: none; margin-bottom: 20px; padding: 16px; border: 1px solid rgba(10, 132, 255, 0.12); border-radius: 12px; background: rgba(255,255,255,0.25);">
+                    <div style="font-weight: 700; font-size: 14px; margin-bottom: 10px; color: var(--text-primary);">Registrar Adulto Mayor</div>
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="caregiver-create-name" placeholder="Ej: José Martínez">
+                    </div>
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="caregiver-create-email" placeholder="elder@caresync.com">
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña</label>
+                        <input type="password" id="caregiver-create-password" placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label>Edad</label>
+                        <input type="number" id="caregiver-create-age" placeholder="Ej: 78">
+                    </div>
+                    <div class="form-group">
+                        <label>PIN (4 dígitos)</label>
+                        <input type="text" id="caregiver-create-pin" placeholder="Ej: 1234">
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn" onclick="registerCaregiverElder()" style="flex: 1; padding: 8px; font-size: 13px;">Registrar</button>
+                        <button class="btn btn-secondary" onclick="toggleCaregiverRegisterForm(false)" style="flex: 1; padding: 8px; font-size: 13px;">Cancelar</button>
+                    </div>
+                </div>
+
+                <div class="list-container" id="caregiver-patient-list">
+                    <!-- Dinámico -->
+                </div>
+            </div>
+
+            <!-- Ficha de Datos (Visualización vs Edición Edad) -->
+            <div class="bento-card" id="cg-file-card">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" id="caregiver-selected-elder-title">Ficha del Adulto Mayor</div>
+                        <div class="card-subtitle">Datos generales e información médica.</div>
+                    </div>
+                </div>
+
+                <div id="caregiver-elder-detail-content" style="flex-grow: 1; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-secondary); text-align: center; padding-top: 50px;">
+                        Selecciona un adulto mayor de la lista para ver sus datos.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicación y Programar Dosis -->
+            <div class="bento-card" id="cg-meds-card">
+                <div id="caregiver-meds-box" style="display: none; flex-direction: column; gap: 10px; height: 100%;">
+                    <div style="font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 8px;">Medicación del Familiar</div>
+                    
+                    <div class="list-container" id="caregiver-med-list" style="max-height: 180px; gap: 8px;">
+                        <!-- Dinámico -->
+                    </div>
+
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 10px; margin-top: auto;">
+                        <div style="font-weight: 600; font-size: 13px; margin-bottom: 8px;">Programar Nueva Dosis</div>
+                        <div class="form-group" style="margin-bottom: 8px;">
+                            <input type="text" id="new-med-name" placeholder="Medicamento (Ej: Losartán)">
+                        </div>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" id="new-med-dosage" placeholder="Dosis (Ej: 1 pastilla)">
+                            <input type="text" id="new-med-time" placeholder="Hora (Ej: 08:00)">
+                        </div>
+                        <button class="btn" onclick="addMedication()" style="padding: 8px; font-size: 13px;">Programar Dosis</button>
+                    </div>
+                </div>
+                <div id="cg-meds-placeholder" style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 60px 20px;">
+                    Selecciona un adulto mayor de la lista para ver su medicación.
+                </div>
+            </div>
+
+            <!-- Observaciones IA -->
+            <div class="bento-card" id="cg-insights-card">
+                <div id="caregiver-insights-box" style="display: none; flex-direction: column; gap: 10px; height: 100%;">
+                    <div style="font-weight: 700; font-size: 16px; color: var(--text-primary); margin-bottom: 8px;">Observaciones de IA</div>
+                    <div class="list-container" id="caregiver-patient-insights" style="max-height: 180px; gap: 8px;">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+                <div id="cg-insights-placeholder" style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 40px 20px;">
+                    Selecciona un adulto mayor para ver sus observaciones.
+                </div>
+            </div>
+
+            <!-- Bitácora de Actividad del Familiar -->
+            <div class="bento-card" id="cg-logs-card">
+                <div id="caregiver-activity-box" style="display: none; height: 100%;">
+                    <div style="font-weight: 700; font-size: 14px; color: var(--text-primary); margin-bottom: 10px;">Bitácora de Actividad del Familiar</div>
+                    <div class="list-container" id="caregiver-patient-logs" style="max-height: 200px; overflow-y: auto; gap: 8px;">
+                        <!-- Dinámico -->
+                    </div>
+                </div>
+                <div id="cg-logs-placeholder" style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 50px 20px;">
+                    Selecciona un adulto mayor para ver su bitácora.
+                </div>
+            </div>
+        </div>
+
+        <!-- C. PANEL ADMINISTRATIVO -->
+        <div class="bento-grid" id="admin-portal" class="grid-admin" style="display: none;">
+            <!-- Registro de Médicos/Cuidadores -->
+            <div class="bento-card" style="min-height: 500px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Asignar Cuentas</div>
+                        <div class="card-subtitle">Crear perfiles de Médicos, Cuidadores y Adultos Mayores.</div>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label for="create-name">Nombre Completo</label>
+                        <input type="text" id="create-name" placeholder="Ej: Dr. House">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-email">Correo</label>
+                        <input type="email" id="create-email" placeholder="ejemplo@caresync.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-password">Contraseña</label>
+                        <input type="password" id="create-password" placeholder="••••••••">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-phone">Número de Teléfono/Contacto</label>
+                        <input type="text" id="create-phone" placeholder="Ej: +56912345678">
+                    </div>
+                    <div class="form-group">
+                        <label for="create-role">Rol de Cuenta</label>
+                        <select id="create-role" onchange="toggleAdminRegisterFields()">
+                            <option value="DOCTOR">Médico (DOCTOR)</option>
+                            <option value="CAREGIVER">Cuidador (CAREGIVER)</option>
+                            <option value="ELDER">Adulto Mayor (ELDER)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="admin-caregiver-email-group" style="display: none;">
+                        <label for="create-caregiver-email">Correo del Cuidador Vinculado</label>
+                        <input type="email" id="create-caregiver-email" placeholder="cuidador@caresync.com">
+                    </div>
+                    <button class="btn" onclick="createUserAccount()">Registrar Cuenta</button>
+                </div>
+            </div>
+
+            <!-- Cuentas Activas del Sistema -->
+            <div class="bento-card" style="min-height: 500px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Cuentas Activas</div>
+                        <div class="card-subtitle">Usuarios registrados agrupados por su rol.</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="fetchAdminUsers()" style="width: auto; padding: 6px 12px; font-size:12px;">Refrescar</button>
+                </div>
+                <div class="list-container" id="admin-users-list" style="gap: 12px; flex-grow: 1;">
+                    <!-- Categorías de roles cargadas dinámicamente -->
+                </div>
+            </div>
+
+            <!-- Detalle Clínico y de Ficha (Administrador) -->
+            <div class="bento-card" style="min-height: 500px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title" id="admin-detail-title">Ficha de Usuario</div>
+                        <div class="card-subtitle">Detalle y edición de diagnósticos.</div>
+                    </div>
+                </div>
+                <div id="admin-user-detail-content" style="flex-grow: 1; display: flex; flex-direction: column; gap: 14px;">
+                    <div style="font-size: 13px; color: var(--text-secondary); text-align: center; padding-top: 50px;">
+                        Selecciona un adulto mayor en las cuentas activas para ver y editar su ficha clínica.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Auditorías del Sistema -->
+            <div class="bento-card" style="grid-column: span 3; margin-top: 8px;">
+                <div class="card-header">
+                    <div>
+                        <div class="card-title">Bitácora de Auditoría Inmutable (Capa 5)</div>
+                        <div class="card-subtitle">Registro de operaciones críticas y logs del sistema.</div>
+                    </div>
+                    <button class="btn btn-secondary" onclick="fetchAuditLogs()" style="width: auto; padding: 6px 12px; font-size:13px;">Refrescar logs</button>
+                </div>
+                <div style="flex-grow:1; overflow-y:auto; max-height:400px; margin-top:10px;">
+                    <table class="audit-table">
+                        <thead>
+                            <tr>
+                                <th>Timestamp</th>
+                                <th>Acción</th>
+                                <th>Detalles</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-audit-logs">
+                            <!-- Dinámico -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. CONFIGURATION MODAL -->
+        <div class="modal-overlay" id="config-modal">
+            <div class="bento-card modal-content" style="max-width: 420px; text-align: center;">
+            <div class="card-header" style="margin-bottom: 20px; justify-content: center; position: relative; width: 100%;">
+                <div style="text-align: center; width: 100%;">
+                    <div class="card-title">Foto de Perfil</div>
+                    <div class="card-subtitle">Actualiza tu imagen del portal clínico</div>
+                </div>
+                <button class="action-circle-btn" onclick="closeConfigModal()" style="position: absolute; right: 0; top: 0; background: rgba(0,0,0,0.05); color: var(--text-primary); box-shadow: none; border: 1px solid rgba(0,0,0,0.08); font-size: 14px; font-weight: normal; width: 28px; height: 28px; border-radius: 50%;">✕</button>
+            </div>
+
+            <div style="display: flex; flex-direction: column; align-items: center; gap: 20px;">
+                <!-- Profile Image Avatar Placeholder -->
+                <div style="position: relative; width: 120px; height: 120px; border-radius: 50%; background: rgba(10, 132, 255, 0.08); border: 2px solid var(--primary-accent); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: 0 8px 20px rgba(10, 132, 255, 0.12);">
+                    <svg id="config-avatar-placeholder" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--primary-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    <!-- Visual uploaded image display if any -->
+                    <img id="config-avatar-preview" style="position: absolute; width: 100%; height: 100%; object-fit: cover; display: none;">
+                </div>
+
+                <div style="width: 100%;">
+                    <!-- File input styled as button -->
+                    <label class="btn btn-secondary" style="width: 100%; cursor: pointer; margin-bottom: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                        Seleccionar Imagen
+                        <input type="file" id="config-photo-input" accept="image/*" style="display: none;" onchange="previewProfilePhoto(event)">
+                    </label>
+                    <button class="btn btn-secondary" onclick="deleteProfilePhoto()" style="width: 100%; color: var(--accent-red); border-color: rgba(255, 69, 58, 0.2); background: rgba(255, 69, 58, 0.05); margin-bottom: 10px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                        Eliminar Foto
+                    </button>
+                    <button class="btn" onclick="handleLogout()" style="width: 100%; background: var(--accent-red); color: white; border: none; box-shadow: 0 4px 12px rgba(255, 69, 58, 0.2);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                        Cerrar Sesión
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
+                <button class="btn btn-secondary" onclick="closeConfigModal()" style="width: auto; padding: 10px 20px;">Cancelar</button>
+                <button class="btn" onclick="saveProfilePhotoConfig()" style="width: auto; padding: 10px 20px;">Guardar</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script>
+        const BACKEND_URL = "http://127.0.0.1:8000/api/v1";
+        let currentUser = null;
+            authToken = null;
+        let authToken = null;
+
+        async function fetchWithAuth(url, options = {}) {
+            if (authToken) {
+                options.headers = {
+                    ...options.headers,
+                    'Authorization': `Bearer ${authToken}`
+                };
+            }
+            return fetchWithAuth(url, options);
+        }
+        let selectedPatientId = null;
+        let isEditing = false; // Bandera para evitar que el auto-refresh interrumpa al usuario mientras edita
+        let alertSocket = null;
+
+        // Auto-llenar campos
+        function quickFill(email) {
+            document.getElementById('login-email').value = email;
+            document.getElementById('login-password').value = 'securepassword';
+        }
+
+        // Login Handler
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                alert("Por favor complete los campos.");
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                if (!response.ok) {
+                    alert("Error en login. Verifique sus credenciales.");
+                    return;
+                }
+
+                const data = await response.json();
+                currentUser = data.user;
+                authToken = data.access_token;
+
+                // Transición de pantallas
+                document.getElementById('login-screen').style.display = 'none';
+                document.getElementById('main-dashboard').style.display = 'flex';
+                
+                // Cargar el portal adecuado
+                setupPortalView();
+            } catch (e) {
+                console.error(e);
+                alert("Error al conectar con el servidor.");
+            }
+        }
+
+        function handleLogout() {
+            if (!confirm("¿Está seguro de que desea cerrar sesión?")) {
+                return;
+            }
+            if (alertSocket) {
+                alertSocket.close();
+                alertSocket = null;
+            }
+            currentUser = null;
+            selectedPatientId = null;
+            isEditing = false;
+            document.getElementById('main-dashboard').style.display = 'none';
+            document.getElementById('login-screen').style.display = 'block';
+            
+            // Show placeholders again
+            const pMed = document.getElementById('cg-meds-placeholder');
+            if (pMed) pMed.style.display = 'block';
+            const pIns = document.getElementById('cg-insights-placeholder');
+            if (pIns) pIns.style.display = 'block';
+            const pLog = document.getElementById('cg-logs-placeholder');
+            if (pLog) pLog.style.display = 'block';
+            
+            closeConfigModal();
+        }
+
+        // Setup views based on role (doctor, caregiver, admin)
+        function setupPortalView() {
+            const indicator = document.getElementById('profile-indicator');
+            
+            // Ocultar todos
+            document.getElementById('doctor-portal').style.display = 'none';
+            document.getElementById('caregiver-portal').style.display = 'none';
+            document.getElementById('admin-portal').style.display = 'none';
+
+            if (currentUser.role === 'DOCTOR') {
+                indicator.innerText = `Clínico: ${currentUser.full_name}`;
+                document.getElementById('doctor-portal').style.display = 'grid';
+                loadDoctorPatients();
+            } else if (currentUser.role === 'CAREGIVER') {
+                indicator.innerText = `Cuidador: ${currentUser.full_name}`;
+                document.getElementById('caregiver-portal').style.display = 'grid';
+                loadCaregiverDashboard();
+            } else if (currentUser.role === 'ADMIN') {
+                indicator.innerText = `Administrador: ${currentUser.full_name}`;
+                document.getElementById('admin-portal').style.display = 'grid';
+                fetchAuditLogs();
+                fetchAdminUsers();
+            }
+            
+            connectAlertWebSocket();
+        }
+
+        // Real-time alerts via WebSocket
+        function connectAlertWebSocket() {
+            if (alertSocket) {
+                alertSocket.close();
+            }
+            
+            const wsUrl = BACKEND_URL.replace("http://", "ws://").replace("https://", "wss://") + "/ws/alerts";
+            alertSocket = new WebSocket(wsUrl);
+            
+            alertSocket.onopen = () => {
+                console.log("WebSocket de alertas conectado");
+            };
+            
+            alertSocket.onmessage = async (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    console.log("Alerta WebSocket recibida:", data);
+                    
+                    if (data.event === "emergency_triggered") {
+                        let isMyPatient = false;
+                        if (currentUser.role === 'ADMIN') {
+                            isMyPatient = true;
+                        } else if (currentUser.role === 'CAREGIVER') {
+                            const res = await fetchWithAuth(`${BACKEND_URL}/caregiver/${currentUser.id}/patients`);
+                            if (res.ok) {
+                                const patients = await res.json();
+                                isMyPatient = patients.some(p => p.id === data.patient_id);
+                            }
+                        } else if (currentUser.role === 'DOCTOR') {
+                            const res = await fetchWithAuth(`${BACKEND_URL}/doctor/${currentUser.id}/patients`);
+                            if (res.ok) {
+                                const patients = await res.json();
+                                isMyPatient = patients.some(p => p.id === data.patient_id);
+                            }
+                        }
+                        
+                        if (isMyPatient) {
+                            const banner = document.getElementById('emergency-banner');
+                            if (banner) {
+                                banner.querySelector('.alert-title').innerText = `ALERTA CRÍTICA: EMERGENCIA ACTIVA`;
+                                banner.querySelector('.alert-desc').innerText = `${data.patient_name} ha reportado una emergencia. Detalles: ${data.details || 'Botón de pánico o voz.'}`;
+                                banner.dataset.activeEmergencyPatientId = data.patient_id;
+                                banner.classList.add('active');
+                            }
+                            
+                            // Speak alert if support is available
+                            if ('speechSynthesis' in window) {
+                                const utterance = new SpeechSynthesisUtterance(`Alerta de emergencia. El paciente ${data.patient_name} necesita ayuda.`);
+                                utterance.lang = 'es-ES';
+                                window.speechSynthesis.speak(utterance);
+                            }
+                            
+                            // Refresh lists
+                            if (currentUser.role === 'CAREGIVER') {
+                                loadCaregiverDashboard();
+                            }
+                        }
+                    } else if (data.event === "emergency_resolved") {
+                        const banner = document.getElementById('emergency-banner');
+                        if (banner && banner.dataset.activeEmergencyPatientId == data.patient_id) {
+                            banner.classList.remove('active');
+                            delete banner.dataset.activeEmergencyPatientId;
+                            alert(`La emergencia de ${data.patient_name} ha sido resuelta.`);
+                            if (currentUser.role === 'CAREGIVER') {
+                                loadCaregiverDashboard();
+                            }
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error en mensaje WebSocket:", e);
+                }
+            };
+            
+            alertSocket.onclose = () => {
+                console.log("WebSocket cerrado. Reintentando...");
+                if (currentUser) {
+                    setTimeout(connectAlertWebSocket, 5000);
+                }
+            };
+            
+            alertSocket.onerror = (e) => {
+                console.error("Error en WebSocket de alertas", e);
+            };
+        }
+
+        // --- DOCTOR FLOWS ---
+        async function loadDoctorPatients() {
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/doctor/${currentUser.id}/patients`);
+                const patients = await response.json();
+                const list = document.getElementById('doctor-patient-list');
+                list.innerHTML = '';
+
+                patients.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item' + (selectedPatientId === p.id ? ' active' : '');
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-weight: 700; font-size: 16px;">${p.full_name}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">ID: ${p.id} | Paciente Mayor</div>
+                        </div>
+                        <div class="status-light green"></div>
+                    `;
+                    item.onclick = () => selectPatient(p.id, p.full_name);
+                    list.appendChild(item);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function searchPatients() {
+            const query = document.getElementById('patient-search-input').value;
+            if (!query.trim()) {
+                loadDoctorPatients();
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/patients/search?query=${query}`);
+                const patients = await response.json();
+                const list = document.getElementById('doctor-patient-list');
+                list.innerHTML = '';
+
+                patients.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item' + (selectedPatientId === p.id ? ' active' : '');
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-weight: 700; font-size: 16px;">${p.full_name}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">ID: ${p.id}</div>
+                        </div>
+                        <div class="status-light green"></div>
+                    `;
+                    item.onclick = () => selectPatient(p.id, p.full_name);
+                    list.appendChild(item);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function toggleDoctorEditForm(show) {
+            isEditing = show;
+            document.getElementById('patient-clinical-file-view').style.display = show ? 'none' : 'block';
+            document.getElementById('patient-clinical-file-edit').style.display = show ? 'block' : 'none';
+        }
+
+        async function selectPatient(patientId, name) {
+            selectedPatientId = patientId;
+            document.getElementById('selected-patient-name').innerText = `Paciente: ${name}`;
+
+             // 1. Cargar Ficha Clínica (Edad, Enfermedades, Diagnósticos)
+             try {
+                 const detailsRes = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/details`);
+                 if (detailsRes.ok) {
+                     const details = await detailsRes.json();
+                     
+                     // Llenar vista
+                     document.getElementById('patient-view-name').innerText = details.full_name;
+                     document.getElementById('patient-view-email').innerText = details.email || 'Sin correo electrónico';
+                     document.getElementById('patient-view-age').innerText = details.age ? `${details.age} años` : 'No especificada';
+                     document.getElementById('patient-view-diseases').innerText = details.diseases || 'Ninguna registrada';
+                     document.getElementById('patient-view-diagnostics').innerText = details.diagnostics || 'Ninguno registrado';
+                     
+                     // Llenar edición (Doctor sólo edita enfermedades y diagnósticos)
+                     document.getElementById('patient-diseases-input').value = details.diseases || '';
+                     document.getElementById('patient-diagnostics-input').value = details.diagnostics || '';
+                     
+                     if (!isEditing) {
+                         document.getElementById('patient-clinical-file-view').style.display = 'block';
+                         document.getElementById('patient-clinical-file-edit').style.display = 'none';
+                     }
+                 }
+             } catch(e) { console.error("Error al cargar ficha clínica:", e); }
+
+             // 2. Cargar Dosis
+             try {
+                  const response = await fetchWithAuth(`${BACKEND_URL}/sync/pull?user_id=${patientId}&desde=1970-01-01T00:00:00.000Z`);
+                  const data = await response.json();
+                  const medList = document.getElementById('selected-patient-meds');
+                  medList.innerHTML = '';
+
+                  if (data.medications.length === 0) {
+                      medList.innerHTML = '<div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 10px;">Sin medicamentos programados.</div>';
+                  } else {
+                      data.medications.forEach(m => {
+                          const item = document.createElement('div');
+                          item.className = 'med-item';
+                          item.innerHTML = `
+                              <div>
+                                  <div class="med-title">${m.name}</div>
+                                  <div class="med-meta">Dosis: ${m.dosage} | Hora: ${m.time_to_take}</div>
+                              </div>
+                              <span class="status-badge synced">Sincronizado</span>
+                          `;
+                          medList.appendChild(item);
+                      });
+                  }
+             } catch (e) { console.error(e); }
+
+             // 3. Cargar Insights de IA (LangChain)
+             const insightList = document.getElementById('selected-patient-insights');
+             insightList.innerHTML = '<div style="font-size:13px; color:var(--text-secondary);">Cargando observaciones...</div>';
+             
+             try {
+                 const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/insights`);
+                 const insights = await response.json();
+                 insightList.innerHTML = '';
+
+                 if (insights.length === 0) {
+                     insightList.innerHTML = '<div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 10px;">Sin observaciones registradas por la IA.</div>';
+                 } else {
+                     insights.forEach(insight => {
+                         const div = document.createElement('div');
+                         div.className = 'insight-item';
+                         
+                         const date = new Date(insight.timestamp);
+                         const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                         
+                         div.innerHTML = `
+                             <div style="font-weight: 500; color: var(--text-primary);">${insight.fact}</div>
+                             <div style="font-size: 11px; color: var(--text-secondary); align-self: flex-end;">${timeStr}</div>
+                         `;
+                         insightList.appendChild(div);
+                     });
+                 }
+             } catch (e) {
+                 console.error(e);
+                 insightList.innerHTML = '<div style="font-size:13px; color:red; text-align:center;">Error al cargar observaciones de IA.</div>';
+             }
+
+             // 4. Cargar Bitácora de Actividad
+             const logList = document.getElementById('selected-patient-logs');
+             logList.innerHTML = '<div style="font-size:13px; color:var(--text-secondary);">Cargando bitácora...</div>';
+             try {
+                 const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/emergency/history`);
+                 const logs = await response.json();
+                 logList.innerHTML = '';
+                 if (logs.length === 0) {
+                     logList.innerHTML = '<div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 10px;">Sin actividad registrada.</div>';
+                 } else {
+                     logs.forEach(l => {
+                         const item = document.createElement('div');
+                         item.className = 'list-item';
+                         item.style.padding = '8px 12px';
+                         item.style.fontSize = '13px';
+                         item.style.marginBottom = '6px';
+                         
+                         const isEmergency = l.action.includes('EMERGENCY') || l.action.includes('CREADA') || l.action.includes('RESOLV');
+                         const actionLabel = isEmergency ? `<span class="badge" style="background:#EE4266; color:white; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;">EMERGENCIA</span>` : `<span class="badge" style="background:var(--accent-color); color:var(--text-on-accent); padding:2px 6px; border-radius:4px; font-weight:bold; font-size:10px;">MEDICAMENTO</span>`;
+                         
+                         item.innerHTML = `
+                             <div style="display:flex; justify-content:space-between; align-items:center; width:100%; gap: 10px;">
+                                 <div style="flex: 1;">
+                                     <div style="font-weight:600; color:var(--text-primary);">${l.details}</div>
+                                     <div style="font-size:11px; color:var(--text-secondary); margin-top:2px;">${new Date(l.timestamp).toLocaleString()}</div>
+                                 </div>
+                                 <div>${actionLabel}</div>
+                             </div>
+                         `;
+                         logList.appendChild(item);
+                     });
+                 }
+             } catch(e) {
+                 console.error(e);
+                 logList.innerHTML = '<div style="font-size:13px; color:red; text-align:center;">Error al cargar bitácora.</div>';
+             }
+         }
+
+         async function savePatientDetails() {
+             if (!selectedPatientId) return;
+             const diseasesVal = document.getElementById('patient-diseases-input').value;
+             const diagnosticsVal = document.getElementById('patient-diagnostics-input').value;
+
+             try {
+                 const response = await fetchWithAuth(`${BACKEND_URL}/patient/${selectedPatientId}/details`, {
+                     method: 'PATCH',
+                     headers: { 'Content-Type': 'application/json' },
+                     body: JSON.stringify({
+                         diseases: diseasesVal,
+                         diagnostics: diagnosticsVal
+                     })
+                 });
+
+                 if (response.ok) {
+                     alert("Ficha clínica del paciente actualizada con éxito por el Clínico.");
+                     toggleDoctorEditForm(false);
+                     const patientName = document.getElementById('patient-view-name').innerText;
+                     selectPatient(selectedPatientId, patientName);
+                 } else {
+                     alert("Error al guardar la ficha clínica.");
+                 }
+             } catch(e) {
+                 console.error(e);
+             }
+         }
+
+        // --- CAREGIVER FLOWS ---
+        function toggleCaregiverRegisterForm(show) {
+            document.getElementById('caregiver-register-form-box').style.display = show ? 'block' : 'none';
+        }
+
+        async function loadCaregiverDashboard() {
+            if (!currentUser) return;
+            try {
+                // Obtener adultos mayores vinculados al cuidador
+                const response = await fetchWithAuth(`${BACKEND_URL}/caregiver/${currentUser.id}/patients`);
+                const patients = await response.json();
+                
+                const list = document.getElementById('caregiver-patient-list');
+                list.innerHTML = '';
+
+                if (patients.length === 0) {
+                    list.innerHTML = '<div style="font-size:13px; color:var(--text-secondary); text-align:center; padding: 20px;">No tienes familiares vinculados a tu cuenta de cuidador.</div>';
+                    document.getElementById('caregiver-selected-elder-title').innerText = 'Ficha del Adulto Mayor';
+                    document.getElementById('caregiver-elder-detail-content').innerHTML = `
+                        <div style="font-size: 13px; color: var(--text-secondary); text-align: center; padding-top: 50px;">
+                            Registra un adulto mayor usando el botón <strong>+ Registrar</strong> para empezar.
+                        </div>
+                    `;
+                    document.getElementById('caregiver-meds-box').style.display = 'none';
+                    document.getElementById('caregiver-insights-box').style.display = 'none';
+                    // Show placeholders
+                    const pMed = document.getElementById('cg-meds-placeholder');
+                    if (pMed) pMed.style.display = 'block';
+                    const pIns = document.getElementById('cg-insights-placeholder');
+                    if (pIns) pIns.style.display = 'block';
+                    const pLog = document.getElementById('cg-logs-placeholder');
+                    if (pLog) pLog.style.display = 'block';
+                    return;
+                }
+
+                let anyActiveEmergency = false;
+                let emergencyPatient = null;
+
+                patients.forEach(p => {
+                    const item = document.createElement('div');
+                    item.className = 'list-item' + (selectedPatientId === p.id ? ' active' : '');
+                    const statusClass = p.active_emergency ? 'orange' : 'green';
+                    item.innerHTML = `
+                        <div>
+                            <div style="font-weight: 700; font-size: 16px;">${p.full_name}</div>
+                            <div style="font-size: 13px; color: var(--text-secondary);">Edad: ${p.age || 'N/E'} | Correo: ${p.email || 'Sin correo'}</div>
+                        </div>
+                        <div class="status-light ${statusClass}"></div>
+                    `;
+                    item.onclick = () => selectCaregiverPatient(p.id, p.full_name);
+                    list.appendChild(item);
+
+                    if (p.active_emergency) {
+                        anyActiveEmergency = true;
+                        emergencyPatient = p;
+                    }
+                });
+
+                const banner = document.getElementById('emergency-banner');
+                if (anyActiveEmergency && banner) {
+                    banner.querySelector('.alert-title').innerText = `ALERTA CRÍTICA: EMERGENCIA ACTIVA`;
+                    banner.querySelector('.alert-desc').innerText = `${emergencyPatient.full_name} tiene una emergencia activa en su dispositivo.`;
+                    banner.dataset.activeEmergencyPatientId = emergencyPatient.id;
+                    banner.classList.add('active');
+                } else if (banner && !banner.dataset.activeEmergencyPatientId) {
+                    banner.classList.remove('active');
+                }
+
+                // Si hay un paciente seleccionado, refrescarlo sin perder el formulario de edición si está activo
+                if (selectedPatientId && !isEditing) {
+                    const activePatient = patients.find(p => p.id === selectedPatientId);
+                    if (activePatient) {
+                        selectCaregiverPatient(activePatient.id, activePatient.full_name);
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function toggleCaregiverEditAge(show) {
+            isEditing = show;
+            document.getElementById('caregiver-elder-view-box').style.display = show ? 'none' : 'flex';
+            document.getElementById('caregiver-elder-edit-box').style.display = show ? 'flex' : 'none';
+        }
+
+        async function selectCaregiverPatient(patientId, name) {
+            selectedPatientId = patientId;
+            document.getElementById('caregiver-selected-elder-title').innerText = `Familiar: ${name}`;
+
+            // Hide placeholders
+            const pMed = document.getElementById('cg-meds-placeholder');
+            if (pMed) pMed.style.display = 'none';
+            const pIns = document.getElementById('cg-insights-placeholder');
+            if (pIns) pIns.style.display = 'none';
+            const pLog = document.getElementById('cg-logs-placeholder');
+            if (pLog) pLog.style.display = 'none';
+
+            try {
+                // 1. Ficha del Adulto Mayor
+                const detailsRes = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/details`);
+                if (detailsRes.ok) {
+                    const details = await detailsRes.json();
+                    const container = document.getElementById('caregiver-elder-detail-content');
+                    
+                    container.innerHTML = `
+                        <!-- Visualización -->
+                        <div id="caregiver-elder-view-box" style="display: flex; flex-direction: column; gap: 14px;">
+                            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; font-weight: 700; font-size:14px; color:var(--text-primary);">Datos Personales del Adulto Mayor</div>
+                            <div>
+                                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Nombre Completo</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${details.full_name}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Correo Electrónico</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${details.email || 'Sin correo electrónico'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Edad</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${details.age ? `${details.age} años` : 'No especificada'}</div>
+                            </div>
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 10px;">
+                                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; color:var(--text-secondary);">Enfermedades (Solo Lectura - Médico)</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-top: 2px; color: var(--text-primary);">${details.diseases || 'Ninguna registrada por el médico'}</div>
+                            </div>
+                            <div>
+                                <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase; color:var(--text-secondary);">Diagnósticos / Notas Clínicas (Solo Lectura)</div>
+                                <div style="font-size: 14px; font-weight: 600; margin-top: 2px; color: var(--text-primary);">${details.diagnostics || 'Ninguno registrado por el médico'}</div>
+                            </div>
+                            <button class="btn btn-secondary" onclick="toggleCaregiverEditAge(true)" style="margin-top: 10px;">Modificar Edad</button>
+                        </div>
+
+                        <!-- Edición Edad -->
+                        <div id="caregiver-elder-edit-box" style="display: none; flex-direction: column; gap: 14px;">
+                            <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; font-weight: 700; font-size:14px; color:var(--text-primary);">Actualizar Edad</div>
+                            <div class="form-group">
+                                <label>Nueva Edad del Adulto Mayor</label>
+                                <input type="number" id="caregiver-patient-age-input" value="${details.age || ''}" placeholder="Ej: 78">
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" onclick="toggleCaregiverEditAge(false)" style="flex: 1;">Cancelar</button>
+                                <button class="btn" onclick="saveCaregiverPatientAge(${details.id})" style="flex: 1;">Guardar Cambios</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // 2. Medicación Programada
+                const medsRes = await fetchWithAuth(`${BACKEND_URL}/sync/pull?user_id=${patientId}&desde=1970-01-01T00:00:00.000Z`);
+                const medsData = await medsRes.json();
+                const medList = document.getElementById('caregiver-med-list');
+                medList.innerHTML = '';
+
+                medsData.medications.forEach(m => {
+                    const item = document.createElement('div');
+                    item.className = 'med-item';
+                    item.style = 'padding: 10px 14px; margin-bottom: 6px;';
+                    item.innerHTML = `
+                        <div>
+                            <div class="med-title" style="font-size:14px;">${m.name}</div>
+                            <div class="med-meta" style="font-size:11px;">Dosis: ${m.dosage} | Hora: ${m.time_to_take}</div>
+                        </div>
+                        <span class="status-badge synced">Sincronizado</span>
+                    `;
+                    medList.appendChild(item);
+                });
+                document.getElementById('caregiver-meds-box').style.display = 'flex';
+
+                // 3. Insights Clínicos IA
+                const insightsRes = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/insights`);
+                const insights = await insightsRes.json();
+                const insightList = document.getElementById('caregiver-patient-insights');
+                insightList.innerHTML = '';
+
+                if (insights.length === 0) {
+                    insightList.innerHTML = '<div style="font-size:12px; color:var(--text-secondary); text-align:center; padding: 10px;">Sin observaciones o reportes de IA hoy.</div>';
+                } else {
+                    insights.forEach(insight => {
+                        const div = document.createElement('div');
+                        div.className = 'insight-item';
+                        div.style = 'padding: 10px 12px; margin-bottom: 6px;';
+                        
+                        const date = new Date(insight.timestamp);
+                        const timeStr = date.toLocaleDateString() + ' ' + date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                        
+                        div.innerHTML = `
+                            <div style="font-weight: 500; font-size: 13px; color: var(--text-primary);">${insight.fact}</div>
+                            <div style="font-size: 10px; color: var(--text-secondary); align-self: flex-end;">${timeStr}</div>
+                        `;
+                        insightList.appendChild(div);
+                    });
+                }
+                document.getElementById('caregiver-insights-box').style.display = 'flex';
+
+                // 4. Cargar Bitácora de Actividad del Familiar
+                const logList = document.getElementById('caregiver-patient-logs');
+                logList.innerHTML = '<div style="font-size:12px; color:var(--text-secondary);">Cargando bitácora...</div>';
+                try {
+                    const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/emergency/history`);
+                    const logs = await response.json();
+                    logList.innerHTML = '';
+                    if (logs.length === 0) {
+                        logList.innerHTML = '<div style="font-size:12px; color:var(--text-secondary); text-align:center; padding: 10px;">Sin actividad registrada.</div>';
+                    } else {
+                        logs.forEach(l => {
+                            const item = document.createElement('div');
+                            item.className = 'list-item';
+                            item.style.padding = '8px 12px';
+                            item.style.fontSize = '12px';
+                            item.style.marginBottom = '6px';
+                            item.style.background = 'rgba(255,255,255,0.02)';
+                            item.style.border = '1px solid var(--border-color)';
+                            item.style.borderRadius = '6px';
+                            item.style.display = 'flex';
+                            item.style.justifyContent = 'space-between';
+                            item.style.alignItems = 'center';
+                            
+                            const isEmergency = l.action.includes('EMERGENCY') || l.action.includes('CREADA') || l.action.includes('RESOLV');
+                            const actionLabel = isEmergency ? `<span class="badge" style="background:#EE4266; color:white; padding:2px 6px; border-radius:4px; font-weight:bold; font-size:9px;">EMERGENCIA</span>` : `<span class="badge" style="background:var(--accent-color); color:var(--text-on-accent); padding:2px 6px; border-radius:4px; font-weight:bold; font-size:9px;">MEDICAMENTO</span>`;
+                            
+                            item.innerHTML = `
+                                <div style="flex: 1; text-align: left;">
+                                    <div style="font-weight:600; color:var(--text-primary);">${l.details}</div>
+                                    <div style="font-size:10px; color:var(--text-secondary); margin-top:2px;">${new Date(l.timestamp).toLocaleString()}</div>
+                                </div>
+                                <div style="margin-left: 8px;">${actionLabel}</div>
+                            `;
+                            logList.appendChild(item);
+                        });
+                    }
+                } catch(e) {
+                    console.error(e);
+                    logList.innerHTML = '<div style="font-size:12px; color:red; text-align:center;">Error al cargar bitácora.</div>';
+                }
+                document.getElementById('caregiver-activity-box').style.display = 'block';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveCaregiverPatientAge(patientId) {
+            const ageVal = document.getElementById('caregiver-patient-age-input').value;
+            if (!ageVal) {
+                alert("Por favor ingresa una edad válida.");
+                return;
+            }
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/details`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        age: parseInt(ageVal)
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Edad del adulto mayor actualizada con éxito.");
+                    toggleCaregiverEditAge(false);
+                    loadCaregiverDashboard();
+                } else {
+                    alert("Error al actualizar la edad.");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function registerCaregiverElder() {
+            const name = document.getElementById('caregiver-create-name').value;
+            const email = document.getElementById('caregiver-create-email').value;
+            const password = document.getElementById('caregiver-create-password').value;
+            const ageVal = document.getElementById('caregiver-create-age').value;
+            const pinVal = document.getElementById('caregiver-create-pin').value;
+
+            if (!name || !email || !password || !ageVal) {
+                alert("Por favor completa los campos requeridos (Nombre, Correo, Contraseña, Edad).");
+                return;
+            }
+
+            const payload = {
+                full_name: name,
+                email: email,
+                password: password,
+                role: "ELDER",
+                caregiver_email: currentUser.email,
+                age: parseInt(ageVal),
+                pin: pinVal || null
+            };
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert("Adulto Mayor creado y vinculado a tu cuenta exitosamente.");
+                    // Limpiar campos
+                    document.getElementById('caregiver-create-name').value = '';
+                    document.getElementById('caregiver-create-email').value = '';
+                    document.getElementById('caregiver-create-password').value = '';
+                    document.getElementById('caregiver-create-age').value = '';
+                    document.getElementById('caregiver-create-pin').value = '';
+                    
+                    toggleCaregiverRegisterForm(false);
+                    loadCaregiverDashboard();
+                } else {
+                    const err = await response.json();
+                    alert("Error al registrar: " + (err.detail || "Error desconocido"));
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function addMedication() {
+            if (!selectedPatientId) return;
+            const name = document.getElementById('new-med-name').value;
+            const dosage = document.getElementById('new-med-dosage').value;
+            const time = document.getElementById('new-med-time').value;
+
+            if (!name || !dosage || !time) {
+                alert("Llene todos los campos de medicación.");
+                return;
+            }
+
+            const payload = {
+                medications: [{
+                    id_remoto: null,
+                    name: name,
+                    dosage: dosage,
+                    time_to_take: time,
+                    ultima_modificacion_local: new Date().toISOString(),
+                    estado_sincronizacion: "PENDIENTE_CREAR"
+                }]
+            };
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/sync/push?user_id=${selectedPatientId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    document.getElementById('new-med-name').value = '';
+                    document.getElementById('new-med-dosage').value = '';
+                    document.getElementById('new-med-time').value = '';
+                    
+                    // Refrescar medicación
+                    const activeName = document.getElementById('caregiver-selected-elder-title').innerText.replace('Familiar: ', '');
+                    selectCaregiverPatient(selectedPatientId, activeName);
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        // --- ADMIN FLOWS ---
+        function toggleAdminRegisterFields() {
+            const role = document.getElementById('create-role').value;
+            const group = document.getElementById('admin-caregiver-email-group');
+            if (role === 'ELDER') {
+                group.style.display = 'block';
+            } else {
+                group.style.display = 'none';
+            }
+        }
+
+        async function createUserAccount() {
+            const name = document.getElementById('create-name').value;
+            const email = document.getElementById('create-email').value;
+            const password = document.getElementById('create-password').value;
+            const phone = document.getElementById('create-phone').value;
+            const role = document.getElementById('create-role').value;
+            const caregiverEmail = document.getElementById('create-caregiver-email').value;
+
+            if (!name || !email || !password || !phone) {
+                alert("Complete todos los campos, incluyendo el número de contacto.");
+                return;
+            }
+
+            const payload = {
+                full_name: name,
+                email: email,
+                password: password,
+                role: role,
+                phone_number: phone
+            };
+
+            if (role === 'ELDER') {
+                if (!caregiverEmail) {
+                    alert("Para registrar un adulto mayor es obligatorio vincularlo ingresando el correo del cuidador.");
+                    return;
+                }
+                payload.caregiver_email = caregiverEmail;
+            }
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    alert(`Cuenta de ${role} creada correctamente.`);
+                    document.getElementById('create-name').value = '';
+                    document.getElementById('create-email').value = '';
+                    document.getElementById('create-password').value = '';
+                    document.getElementById('create-phone').value = '';
+                    document.getElementById('create-caregiver-email').value = '';
+                    fetchAuditLogs();
+                    fetchAdminUsers();
+                } else {
+                    const err = await response.json();
+                    alert("Error al registrar cuenta: " + (err.detail || "Error desconocido"));
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchAdminUsers() {
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/admin/users`);
+                const data = await response.json();
+                const list = document.getElementById('admin-users-list');
+                list.innerHTML = '';
+
+                const roles = [
+                    { key: "DOCTOR", title: "Médicos" },
+                    { key: "CAREGIVER", title: "Cuidadores" },
+                    { key: "ELDER", title: "Adultos Mayores" }
+                ];
+
+                roles.forEach(r => {
+                    const users = data[r.key] || [];
+                    const category = document.createElement('div');
+                    category.style = "margin-bottom: 12px;";
+                    category.innerHTML = `<div style="font-weight: 700; font-size: 13px; text-transform: uppercase; color: var(--text-secondary); margin-bottom: 6px;">${r.title} (${users.length})</div>`;
+                    
+                    if (users.length === 0) {
+                        const empty = document.createElement('div');
+                        empty.style = "font-size:12px; color:var(--text-secondary); padding-left: 8px; margin-bottom: 8px;";
+                        empty.innerText = "Ninguno registrado";
+                        category.appendChild(empty);
+                    } else {
+                        users.forEach(u => {
+                            const item = document.createElement('div');
+                            item.className = 'list-item' + (selectedPatientId === u.id ? ' active' : '');
+                            item.style = "padding: 10px 14px; margin-bottom: 6px; border-radius: 8px;";
+                            item.innerHTML = `
+                                <div>
+                                    <div style="font-weight: 700; font-size: 14px;">${u.full_name}</div>
+                                    <div style="font-size: 11px; color: var(--text-secondary);">${u.email}</div>
+                                </div>
+                            `;
+                            if (r.key === 'ELDER') {
+                                item.onclick = () => selectAdminPatientDetail(u.id);
+                            }
+                            category.appendChild(item);
+                        });
+                    }
+                    list.appendChild(category);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function toggleAdminEditForm(show) {
+            isEditing = show;
+            document.getElementById('admin-view-box').style.display = show ? 'none' : 'flex';
+            document.getElementById('admin-edit-box').style.display = show ? 'flex' : 'none';
+        }
+
+        async function selectAdminPatientDetail(patientId) {
+            selectedPatientId = patientId;
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/details`);
+                const p = await response.json();
+                const container = document.getElementById('admin-user-detail-content');
+                
+                container.innerHTML = `
+                    <!-- Visualización -->
+                    <div id="admin-view-box" style="display: flex; flex-direction: column; gap: 14px;">
+                        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; font-weight: 700; font-size:14px; color:var(--text-primary);">Datos Actuales del Paciente</div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Nombre Completo</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${p.full_name}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Correo Electrónico</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${p.email || 'Sin correo'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Edad</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${p.age || 'No especificada'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Enfermedades</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${p.diseases || 'Ninguna registrada'}</div>
+                        </div>
+                        <div>
+                            <div style="font-size: 10px; color: var(--text-secondary); font-weight: 600; text-transform: uppercase;">Diagnósticos / Notas</div>
+                            <div style="font-size: 14px; font-weight: 600; margin-top: 2px;">${p.diagnostics || 'Ninguno registrado'}</div>
+                        </div>
+                        <button class="btn btn-secondary" onclick="toggleAdminEditForm(true)" style="margin-top: 10px;">Modificar Ficha Completa</button>
+                    </div>
+
+                    <!-- Edición -->
+                    <div id="admin-edit-box" style="display: none; flex-direction: column; gap: 14px;">
+                        <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 6px; font-weight: 700; font-size:14px; color:var(--text-primary);">Editar Ficha (Admin)</div>
+                        <div class="form-group">
+                            <label>Nombre Completo</label>
+                            <input type="text" value="${p.full_name}" disabled style="background: rgba(255,255,255,0.02);">
+                        </div>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <input type="text" value="${p.email || 'Sin correo'}" disabled style="background: rgba(255,255,255,0.02);">
+                        </div>
+                        <div class="form-group">
+                            <label>Edad (Adulto Mayor)</label>
+                            <input type="number" id="admin-patient-age" value="${p.age || ''}" placeholder="Ej: 78">
+                        </div>
+                        <div class="form-group">
+                            <label>Enfermedades</label>
+                            <input type="text" id="admin-patient-diseases" value="${p.diseases || ''}" placeholder="Ej: Artritis, Hipertensión">
+                        </div>
+                        <div class="form-group">
+                            <label>Diagnósticos / Notas Clínicas</label>
+                            <input type="text" id="admin-patient-diagnostics" value="${p.diagnostics || ''}" placeholder="Ej: Controlar presión cada 12 horas">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn btn-secondary" onclick="toggleAdminEditForm(false)" style="flex: 1;">Cancelar</button>
+                            <button class="btn" onclick="saveAdminPatientDetails(${p.id})" style="flex: 1;">Actualizar</button>
+                        </div>
+                    </div>
+                `;
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function saveAdminPatientDetails(patientId) {
+            const ageVal = document.getElementById('admin-patient-age').value;
+            const diseasesVal = document.getElementById('admin-patient-diseases').value;
+            const diagnosticsVal = document.getElementById('admin-patient-diagnostics').value;
+
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/details`, {
+                    method: 'PATCH',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        age: ageVal ? parseInt(ageVal) : null,
+                        diseases: diseasesVal,
+                        diagnostics: diagnosticsVal
+                    })
+                });
+
+                if (response.ok) {
+                    alert("Ficha clínica actualizada exitosamente por el Administrador.");
+                    toggleAdminEditForm(false);
+                    selectAdminPatientDetail(patientId);
+                    fetchAdminUsers();
+                } else {
+                    alert("Error al actualizar la ficha clínica.");
+                }
+            } catch(e) {
+                console.error(e);
+            }
+        }
+
+        async function fetchAuditLogs() {
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/admin/audit_logs`);
+                const logs = await response.json();
+                const list = document.getElementById('admin-audit-logs');
+                list.innerHTML = '';
+
+                logs.forEach(l => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${new Date(l.timestamp).toLocaleTimeString()}</td>
+                        <td><strong>${l.action}</strong></td>
+                        <td>${l.details}</td>
+                    `;
+                    list.appendChild(row);
+                });
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function resolveEmergency() {
+            const banner = document.getElementById('emergency-banner');
+            const patientId = banner.dataset.activeEmergencyPatientId || selectedPatientId;
+            if (!patientId) {
+                alert("No hay una emergencia activa identificada para resolver.");
+                return;
+            }
+            try {
+                const response = await fetchWithAuth(`${BACKEND_URL}/patient/${patientId}/emergency/resolve`, {
+                    method: 'POST'
+                });
+                if (response.ok) {
+                    alert("Emergencia marcada como resuelta.");
+                    banner.classList.remove('active');
+                    delete banner.dataset.activeEmergencyPatientId;
+                    if (currentUser.role === 'CAREGIVER') {
+                        loadCaregiverDashboard();
+                    }
+                } else {
+                    alert("No se pudo resolver la emergencia en el servidor.");
+                }
+            } catch (err) {
+                console.error(err);
+                alert("Error al conectar con el servidor para resolver la emergencia.");
+            }
+        }
+
+        // Polling para mantener sincronización y telemetría en tiempo real
+        setInterval(() => {
+            if (currentUser && !isEditing) {
+                if (currentUser.role === 'CAREGIVER') {
+                    loadCaregiverDashboard();
+                } else if (currentUser.role === 'DOCTOR' && selectedPatientId) {
+                    const patientName = document.getElementById('patient-view-name').innerText;
+                    selectPatient(selectedPatientId, patientName);
+                } else if (currentUser.role === 'ADMIN') {
+                    fetchAuditLogs();
+                }
+            }
+        }, 5000);
+
+        // Settings Modal Handlers
+        function openConfigModal() {
+            const modal = document.getElementById('config-modal');
+            if (modal) modal.classList.add('active');
+        }
+
+        function closeConfigModal() {
+            const modal = document.getElementById('config-modal');
+            if (modal) modal.classList.remove('active');
+        }
+
+        function previewProfilePhoto(event) {
+            const input = event.target;
+            const preview = document.getElementById('config-avatar-preview');
+            const placeholder = document.getElementById('config-avatar-placeholder');
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    preview.src = e.target.result;
+                    preview.style.display = 'block';
+                    if (placeholder) placeholder.style.display = 'none';
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function deleteProfilePhoto() {
+            const preview = document.getElementById('config-avatar-preview');
+            const placeholder = document.getElementById('config-avatar-placeholder');
+            const input = document.getElementById('config-photo-input');
+            if (preview) {
+                preview.src = '';
+                preview.style.display = 'none';
+            }
+            if (placeholder) placeholder.style.display = 'block';
+            if (input) input.value = '';
+            alert("Foto de perfil eliminada visualmente.");
+        }
+
+        function saveProfilePhotoConfig() {
+            alert("Foto de perfil guardada exitosamente.");
+            closeConfigModal();
+        }
+    </script>
+</body>
+</html>

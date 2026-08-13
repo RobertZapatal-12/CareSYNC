@@ -1,0 +1,19 @@
+{
+  "content": [
+    "./src/**/*.{js,jsx,ts,tsx}"
+  ],
+  "theme": {
+    "extend": {
+      "colors": {
+        "medical-primary": "#0a84ff",
+        "medical-success": "#34c759",
+        "emergency-alert": "#ff453a",
+        "bg-clinical": "#f2f2f7",
+        "surface-card": "#ffffff",
+        "text-main": "#1c1c1e",
+        "text-muted": "#8e8e93"
+      }
+    }
+  },
+  "plugins": []
+}
